@@ -147,10 +147,9 @@ class CardSchemeServiceImpl : CardSchemeService {
 
     @Throws(HttpStatusCodeException::class, InvalidInputException::class)
     override fun performCardVerification(cardNumber: String?, httpEntity: HttpEntity<*>?): CardVerificationResponse? {
-        val validCardNumber = cardNumber?.let { validateCardNumberLength(it) }
-        if (validCardNumber != null) {
-            logCardVerificationRecord(validCardNumber)
-        }
+        val validCardNumber = validateCardNumberLength(cardNumber!!)
+            logCardVerificationRecord(validCardNumber!!)
+
         var savedResponse: CardDetail = cardDetailRepository.findByCardNumber(validCardNumber) ?: run {
             var binListApiResponse: BinListApiResponse? = null
             var response: ResponseEntity<BinListApiResponse?>? = null
@@ -162,15 +161,12 @@ class CardSchemeServiceImpl : CardSchemeService {
                 log.error("Error performing request to BinList API")
                 throw ex
             }
-            if (binListApiResponse != null) {
-                if (validCardNumber != null) {
-                    saveRequestReturnObject(validCardNumber, binListApiResponse)
-                }
-            }
+
+                    saveRequestReturnObject(validCardNumber, binListApiResponse!!)
+
             return mapToCardVerificationResponse(binListApiResponse)
         }
         log.info("Response had been previously saved")
-        log.info("Hello World")
         log.info(savedResponse.toString())
         return mapToCardVerificationResponse(savedResponse)
     }
