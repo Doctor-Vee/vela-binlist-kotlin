@@ -148,6 +148,7 @@ class CardSchemeServiceImpl : CardSchemeService {
     @Throws(HttpStatusCodeException::class, InvalidInputException::class)
     override fun performCardVerification(cardNumber: String?, httpEntity: HttpEntity<*>?): CardVerificationResponse? {
         val validCardNumber = validateCardNumberLength(cardNumber!!)
+//        log.info(validCardNumber) //Done
             logCardVerificationRecord(validCardNumber!!)
 
         var savedResponse: CardDetail = cardDetailRepository.findByCardNumber(validCardNumber) ?: run {

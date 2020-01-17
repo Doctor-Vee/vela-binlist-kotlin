@@ -1,6 +1,7 @@
 package com.vela.binlistkotlin.model
 
 import lombok.Data
+import org.hibernate.annotations.CreationTimestamp
 import java.util.*
 import javax.persistence.*
 
@@ -10,13 +11,17 @@ class CardVerificationRecord {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long = 0
-    @Column(name = "card_number"/*, nullable = false*/)
+
+    @Column(name = "card_number", nullable = false)
     lateinit var cardNumber: String
 
+    @CreationTimestamp
     @Column(name = "request_date", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
-    var requestDate: Date? = null
+    lateinit var requestDate: Date
 
-    constructor(cardNumber: String)
+    constructor(cardNumber: String){
+        this.cardNumber = cardNumber
+    }
 
 }
 
