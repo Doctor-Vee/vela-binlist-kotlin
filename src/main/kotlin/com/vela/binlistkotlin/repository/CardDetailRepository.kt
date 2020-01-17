@@ -7,6 +7,6 @@ import org.springframework.stereotype.Repository
 import java.util.*
 
 @Repository
-interface CardDetailRepository : JpaRepository<CardDetail?, String?> {
-    fun findByCardNumber(cardNumber: String?): Optional<CardDetail?>?
+interface CardDetailRepository : JpaRepository<CardDetail, String> {
+    fun findByCardNumber(cardNumber: String?): CardDetail?
 }

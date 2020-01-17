@@ -16,6 +16,7 @@ class CardVerificationRecord {
     @Column(name = "request_date", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     var requestDate: Date? = null
 
+    constructor(cardNumber: String)
 
 }
 

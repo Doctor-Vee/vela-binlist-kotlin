@@ -12,7 +12,7 @@ import org.springframework.stereotype.Repository
 @Repository
 interface CardVerificationRecordRepository : JpaRepository<CardVerificationRecord, Long> {
     @Query("SELECT new com.vela.binlistkotlin.dto.CardCount(record.cardNumber, count(record.cardNumber)) FROM CardVerificationRecord record GROUP BY record.cardNumber")
-    fun getCardVerificationRecordByCardNumber(pageable: Pageable): Page<List<CardCount>>
+    fun getCardVerificationRecordByCardNumber(): List<CardCount>
 
     //@Query("select c from CardVerificationRecord c")
     //fun testQuery(): List<CardVerificationRecord>
