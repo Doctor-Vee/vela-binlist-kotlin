@@ -6,17 +6,21 @@ import javax.persistence.*
 
 @Entity
 @Table(name = "card_verification_records")
-class CardVerificationRecord (cardNumber: String){
+class CardVerificationRecord {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long = 0
 
-    @Column(name = "card_number")
-    lateinit var cardNumber: String
+    @Column(name = "card_number", nullable = false)
+    var cardNumber: String
 
     @CreationTimestamp
     @Column(name = "request_date", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     lateinit var requestDate: Date
+
+    constructor(cardNumber: String){
+        this.cardNumber = cardNumber
+    }
 
 }
 
