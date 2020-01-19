@@ -6,17 +6,16 @@ import com.vela.binlistkotlin.dto.customer_response.CardStatisticsResponse
 import com.vela.binlistkotlin.dto.customer_response.CardVerificationPayload
 import com.vela.binlistkotlin.dto.customer_response.CardVerificationResponse
 import com.vela.binlistkotlin.exception.InvalidInputException
-import com.vela.binlistkotlin.exception.InvalidPageException
 import com.vela.binlistkotlin.model.CardDetail
 import com.vela.binlistkotlin.model.CardVerificationRecord
 import com.vela.binlistkotlin.repository.CardDetailRepository
 import com.vela.binlistkotlin.repository.CardVerificationRecordRepository
+import com.vela.binlistkotlin.utils.CardType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
-import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpMethod
@@ -25,7 +24,6 @@ import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpStatusCodeException
 import org.springframework.web.client.RestTemplate
-import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 
@@ -58,9 +56,7 @@ class CardSchemeServiceImpl : CardSchemeService {
      */
     @Throws(InvalidInputException::class)
     private fun validateCardNumberLength(cardNumber: String): String {
-//        if (!cardNumber.matches("\\d{6,19}")) {
-//            throw InvalidInputException("Invalid Card Number Input")
-//        }
+
         if (cardNumber.length > 19 || cardNumber.length < 6) {
             throw InvalidInputException("Invalid Card Number Input")
         }
@@ -100,7 +96,7 @@ class CardSchemeServiceImpl : CardSchemeService {
             cardVerificationResponse.payload = cardVerificationPayload
             cardVerificationResponse.payload!!.bank = if (cardDetail.bank == null) "" else cardDetail.bank
             cardVerificationResponse.payload!!.scheme = if (cardDetail.scheme == null) "" else cardDetail.scheme
-            cardVerificationResponse.payload!!.type = if (cardDetail.brand == null) "" else cardDetail.brand
+            cardVerificationResponse.payload!!.type = if (cardDetail.type == CardType.DEBIT) "debit" else "credit"
             cardVerificationResponse.success = true
         }
         log.info(cardVerificationResponse.toString())
@@ -116,11 +112,10 @@ class CardSchemeServiceImpl : CardSchemeService {
     private fun mapToCardDetail(cardNumber: String, binListApiResponse: BinListApiResponse): CardDetail {
         val cardDetail = CardDetail()
         cardDetail.cardNumber = cardNumber
-        cardDetail.cardNumberLength = if (binListApiResponse.number == null) 0 else binListApiResponse.number!!.length
+
+        cardDetail.type = if (binListApiResponse.type.equals("debit")) CardType.DEBIT else CardType.CREDIT
         cardDetail.bank = if (binListApiResponse.bank == null) "" else binListApiResponse.bank!!.name
-        cardDetail.brand = if (binListApiResponse.brand == null) "" else binListApiResponse.brand
         cardDetail.scheme = if (binListApiResponse.scheme == null) "" else binListApiResponse.scheme
-        cardDetail.country = if (binListApiResponse.country == null) "" else binListApiResponse.country!!.name
         return cardDetail
     }
 
@@ -154,10 +149,12 @@ class CardSchemeServiceImpl : CardSchemeService {
         var savedResponse: CardDetail = cardDetailRepository.findByCardNumber(validCardNumber) ?: run {
             var binListApiResponse: BinListApiResponse? = null
             var response: ResponseEntity<BinListApiResponse?>? = null
+
             try {
                 response = restTemplate.exchange("$binlistURL/{validCard}",
                         HttpMethod.GET, httpEntity, BinListApiResponse::class.java, validCardNumber)
                 binListApiResponse = response.body
+                log.info(binListApiResponse.toString())
             } catch (ex: HttpStatusCodeException) {
                 log.error("Error performing request to BinList API")
                 throw ex
