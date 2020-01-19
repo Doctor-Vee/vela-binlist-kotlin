@@ -15,19 +15,10 @@ class CardDetail {
     @Column(name = "card_number")
     var cardNumber: String? = null
 
-    @Column(name = "card_number_length")
-    var cardNumberLength: Int? = null
-
-    var luhn: Boolean? = null
-
     var scheme: String? = null
-
-    var brand: String? = null
 
     @Enumerated(EnumType.STRING)
     var type: CardType? = null
-
-    var country: String? = null
 
     var bank: String? = null
 
