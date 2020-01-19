@@ -76,7 +76,7 @@ class CardSchemeServiceImpl : CardSchemeService {
         val cardVerificationPayload = CardVerificationPayload()
         if (binListApiResponse != null) {
             cardVerificationResponse.payload = cardVerificationPayload
-            cardVerificationResponse.payload!!.bank = if (binListApiResponse.bank == null) "" else binListApiResponse.bank!!.name
+            cardVerificationResponse.payload!!.bank = if (binListApiResponse.bank!!.name == null) "" else binListApiResponse.bank!!.name
             cardVerificationResponse.payload!!.scheme = if (binListApiResponse.scheme == null) "" else binListApiResponse.scheme
             cardVerificationResponse.payload!!.type = if (binListApiResponse.type == null) "" else binListApiResponse.type
             cardVerificationResponse.success = true

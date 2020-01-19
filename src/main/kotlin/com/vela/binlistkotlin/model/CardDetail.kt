@@ -1,12 +1,11 @@
 package com.vela.binlistkotlin.model
 
 import com.vela.binlistkotlin.utils.CardType
-import lombok.Data
-import java.util.*
 import javax.persistence.*
 
-@Data
-@Entity(name = "card_details")
+
+@Entity
+@Table(name = "card_details")
 class CardDetail {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
