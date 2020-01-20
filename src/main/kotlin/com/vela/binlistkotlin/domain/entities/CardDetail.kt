@@ -11,8 +11,8 @@ class CardDetail {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null
 
-    @Column(name = "card_number")
-    var cardNumber: String? = null
+    @Column(name = "card_number", nullable = false)
+    lateinit var cardNumber: String
 
     var scheme: String? = null
 

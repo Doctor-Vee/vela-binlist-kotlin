@@ -5,19 +5,19 @@ import com.vela.binlistkotlin.usecase.data.response.BinListApiResponse
 import com.vela.binlistkotlin.usecase.data.response.CardStatisticsResponse
 import com.vela.binlistkotlin.usecase.data.models.CardVerificationPayload
 import com.vela.binlistkotlin.usecase.data.response.CardVerificationResponse
-import com.vela.binlistkotlin.usecase.exception.InvalidInputException
 import com.vela.binlistkotlin.domain.entities.CardDetail
 import com.vela.binlistkotlin.domain.entities.CardVerificationRecord
 import com.vela.binlistkotlin.domain.service.CardDetailRepository
 import com.vela.binlistkotlin.domain.service.CardVerificationRecordRepository
 import com.vela.binlistkotlin.domain.enums.CardType
+import com.vela.binlistkotlin.usecase.exception.InvalidInputException
+import com.vela.binlistkotlin.usecase.exception.NetworkErrorException
+import com.vela.binlistkotlin.usecase.exception.OutOfBoundsException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.annotation.CacheEvict
-import org.springframework.http.HttpEntity
-import org.springframework.http.HttpMethod
-import org.springframework.http.ResponseEntity
+import org.springframework.http.*
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpStatusCodeException
@@ -50,9 +50,9 @@ class CardSchemeServiceImpl : CardSchemeService {
      * This function validates the length of the card
      * @param cardNumber:String
      * @return the card number (truncated to 6 digits) if the input falls within the range of 6 to 19 characters
-     * @throws InvalidInputException if the input is invalid
+     * @throws ApplicationExceptions if the input is invalid
      */
-    @Throws(InvalidInputException::class)
+
     private fun validateCardNumberLength(cardNumber: String): String {
 
         if (cardNumber.length > 19 || cardNumber.length < 6) {
@@ -135,14 +135,16 @@ class CardSchemeServiceImpl : CardSchemeService {
      * @param httpEntity
      * @return the converted response after receiving response from the external API
      * @throws HttpStatusCodeException
-     * @throws InvalidInputException
+     * @throws ApplicationExceptions
      */
 
-    @Throws(HttpStatusCodeException::class, InvalidInputException::class)
-    override fun performCardVerification(cardNumber: String?, httpEntity: HttpEntity<*>?): CardVerificationResponse? {
+    override fun performCardVerification(cardNumber: String?): CardVerificationResponse? {
         val validCardNumber = validateCardNumberLength(cardNumber!!)
-//        log.info(validCardNumber) //Done
-            logCardVerificationRecord(validCardNumber!!)
+        val headers = HttpHeaders()
+        headers.contentType = MediaType.APPLICATION_JSON
+        val httpEntity: HttpEntity<*> = HttpEntity<Any>(headers)
+
+            logCardVerificationRecord(validCardNumber)
 
         var savedResponse: CardDetail = cardDetailRepository.findByCardNumber(validCardNumber) ?: run {
             var binListApiResponse: BinListApiResponse? = null
@@ -153,9 +155,8 @@ class CardSchemeServiceImpl : CardSchemeService {
                         HttpMethod.GET, httpEntity, BinListApiResponse::class.java, validCardNumber)
                 binListApiResponse = response.body
                 log.info(binListApiResponse.toString())
-            } catch (ex: HttpStatusCodeException) {
-                log.error("Error performing request to BinList API")
-                throw ex
+            } catch (ex: Exception) {
+                throw NetworkErrorException("Network error ... Check your internet connection")
             }
 
                     saveRequestReturnObject(validCardNumber, binListApiResponse!!)
@@ -167,32 +168,30 @@ class CardSchemeServiceImpl : CardSchemeService {
         return mapToCardVerificationResponse(savedResponse)
     }
 
-    @Throws(RuntimeException::class)
     override fun getCardVerificationRecords(start: Int, limit: Int): CardStatisticsResponse? {
+        if (start <= 0) throw InvalidInputException("Start cannot be less than 1")
         val cardStatisticsResponse = CardStatisticsResponse()
         var result: List<CardCount> = cardVerificationRecordRepository
                 .getCardVerificationRecordByCardNumber().sortedByDescending { it.count }
         log.info(result.toString())
-//        if (result == null) {
-//            log.error("Invalid Page Exception")
-//            throw InvalidPageException()
-//        }
-//        if (page.size < 1L) {
-//            log.error("General Runtime Exception")
-//            throw RuntimeException()
-//        }
+
         cardStatisticsResponse.start = start
         cardStatisticsResponse.limit = limit
         cardStatisticsResponse.size = result.size
         cardStatisticsResponse.success = true
 
         val displayStart = (start - 1)*limit
-        val displayStop = (start * limit) -1
+        var displayStop = (start * limit) - 1
+        if (displayStop > result.size) displayStop = result.size -1
         var payload: MutableMap<String, Long> = ConcurrentHashMap()
-        for (i in displayStart..displayStop) {
-//            println("${result[i].cardNumber} = ${result[i].count}")
-            payload[result[i].cardNumber.toString()] = result[i].count
+        try {
+            for (i in displayStart..displayStop) {
+                payload[result[i].cardNumber.toString()] = result[i].count
+            }
+        } catch (ex: Exception){
+            throw OutOfBoundsException("start page unavailable")
         }
+
         payload.toSortedMap()
         cardStatisticsResponse.payload = payload
 
