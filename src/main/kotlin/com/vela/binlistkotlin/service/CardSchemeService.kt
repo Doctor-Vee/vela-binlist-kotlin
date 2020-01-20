@@ -14,5 +14,5 @@ interface CardSchemeService {
     fun performCardVerification(cardNumber: String?, entity: HttpEntity<*>?): CardVerificationResponse?
 
     @Throws(RuntimeException::class)
-    fun getCardVerificationRecords(pageable: Pageable?): CardStatisticsResponse?
+    fun getCardVerificationRecords(start: Int, limit: Int): CardStatisticsResponse?
 }

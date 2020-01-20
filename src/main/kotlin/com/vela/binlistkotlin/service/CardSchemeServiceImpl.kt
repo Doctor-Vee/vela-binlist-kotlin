@@ -169,12 +169,12 @@ class CardSchemeServiceImpl : CardSchemeService {
         return mapToCardVerificationResponse(savedResponse)
     }
 
-    @Cacheable(value = ["cache"], key = "#root.method.name+ '_' +#pageable.pageNumber")
     @Throws(RuntimeException::class)
-    override fun getCardVerificationRecords(pageable: Pageable?): CardStatisticsResponse? {
+    override fun getCardVerificationRecords(start: Int, limit: Int): CardStatisticsResponse? {
         val cardStatisticsResponse = CardStatisticsResponse()
         var result: List<CardCount> = cardVerificationRecordRepository
-                .getCardVerificationRecordByCardNumber()
+                .getCardVerificationRecordByCardNumber().sortedByDescending { it.count }
+        log.info(result.toString())
 //        if (result == null) {
 //            log.error("Invalid Page Exception")
 //            throw InvalidPageException()
@@ -183,15 +183,17 @@ class CardSchemeServiceImpl : CardSchemeService {
 //            log.error("General Runtime Exception")
 //            throw RuntimeException()
 //        }
-//        cardStatisticsResponse.start = page.number + 1
-//        cardStatisticsResponse.limit = page.size
-//        cardStatisticsResponse.size = page.totalElements
-//        if (page.hasContent()) {
+        cardStatisticsResponse.start = start
+        cardStatisticsResponse.limit = limit
+        cardStatisticsResponse.size = result.size
+
         cardStatisticsResponse.success = true
-        val payload: MutableMap<String, Long> = ConcurrentHashMap()
+        var payload: MutableMap<String, Long> = ConcurrentHashMap()
         for (item in result) {
+            println("${item.cardNumber} = ${item.count}")
             payload[item.cardNumber.toString()] = item.count
         }
+        payload.toSortedMap()
         cardStatisticsResponse.payload = payload
 
         return cardStatisticsResponse

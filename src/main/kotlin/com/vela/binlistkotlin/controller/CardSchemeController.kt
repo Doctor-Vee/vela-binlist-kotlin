@@ -26,9 +26,7 @@ class CardSchemeController {
     @GetMapping(value = ["/stats"], params = ["start", "limit"])
     fun getCardStatistics(@RequestParam("start") start: Int,
                           @RequestParam("limit") limit: Int): ResponseEntity<CardStatisticsResponse?> {
-        var start = start
         if (start < 0) throw InvalidPageException()
-        if (start >= 1) start--
-        return ResponseEntity(cardSchemeService.getCardVerificationRecords(PageRequest.of(start, limit)), HttpStatus.OK)
+        return ResponseEntity(cardSchemeService.getCardVerificationRecords(start, limit), HttpStatus.OK)
     }
 }
