@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service
 @Service
 interface CardSchemeService {
 
+    fun searchForCard(searchQuery: String): List<CardVerificationResponse>
 
     fun performCardVerification(cardNumber: String?): CardVerificationResponse?
 

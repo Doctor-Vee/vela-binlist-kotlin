@@ -129,6 +129,18 @@ class CardSchemeServiceImpl : CardSchemeService {
         cardDetailRepository.save(cardDetail)
     }
 
+    override fun searchForCard(searchQuery: String): List<CardVerificationResponse> {
+        var result: List<CardDetail> = cardDetailRepository.searchCardDetails(searchQuery)
+        log.info(result.toString())
+        val finalResponse = mutableListOf<CardVerificationResponse>()
+
+        for (card in result) {
+        finalResponse.add(mapToCardVerificationResponse(card))
+        }
+
+        return finalResponse
+    }
+
     /**
      * This function performs the actual verification of the card by making calls to the external API and returning appropriate responses
      * @param cardNumber:String
@@ -169,6 +181,7 @@ class CardSchemeServiceImpl : CardSchemeService {
     }
 
     override fun getCardVerificationRecords(start: Int, limit: Int): CardStatisticsResponse? {
+        println("Entered YES!!!")
         if (start <= 0) throw InvalidInputException("Start cannot be less than 1")
         val cardStatisticsResponse = CardStatisticsResponse()
         var result: List<CardCount> = cardVerificationRecordRepository

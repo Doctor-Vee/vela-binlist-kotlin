@@ -8,6 +8,7 @@ import com.vela.binlistkotlin.usecase.service.CardSchemeService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.*
 import org.springframework.web.bind.annotation.*
+import javax.management.Query
 
 @RestController
 @RequestMapping("/card-scheme")
@@ -15,8 +16,13 @@ class CardSchemeController {
     @Autowired
     lateinit var cardSchemeService: CardSchemeService
 
+    @GetMapping("/search/{searchQuery}")
+    fun searchCard(@PathVariable searchQuery: String): ResponseEntity<List<CardVerificationResponse>> {
+        return ResponseEntity(cardSchemeService.searchForCard(searchQuery), HttpStatus.OK)
+    }
+
     @GetMapping("/verify/{cardNumber}")
-    fun verifyCard(@PathVariable cardNumber: String?): ResponseEntity<CardVerificationResponse> {
+    fun verifyCard(@PathVariable cardNumber: String): ResponseEntity<CardVerificationResponse> {
         return ResponseEntity(cardSchemeService.performCardVerification(cardNumber), HttpStatus.OK)
     }
 

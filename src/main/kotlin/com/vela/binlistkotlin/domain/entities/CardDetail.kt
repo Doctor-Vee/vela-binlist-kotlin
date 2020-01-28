@@ -6,7 +6,7 @@ import javax.persistence.*
 
 @Entity
 @Table(name = "card_details")
-class CardDetail {
+class CardDetail() {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null
